@@ -11,3 +11,5 @@ MedLens organizes documented medical information, links facts to source evidence
 5. Start the frontend from `frontend/` with `npm run dev`.
 
 The frontend may use `VITE_API_BASE_URL` for the non-secret backend URL. Never use `VITE_GROQ_API_KEY` or expose provider credentials to the browser.
+
+codeRabbit review branch
