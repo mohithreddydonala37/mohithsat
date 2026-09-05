@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import datetime, timezone
 from io import BytesIO
@@ -102,11 +103,11 @@ async def _read_pdf(upload: UploadFile) -> tuple[str, bytes, list[dict[str, obje
     return upload.filename, content, pages
 
 
-def _save_private_pdf(content: bytes) -> Path:
+async def _save_private_pdf(content: bytes) -> Path:
     try:
-        PRIVATE_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+        await asyncio.to_thread(PRIVATE_STORAGE_DIR.mkdir, parents=True, exist_ok=True)
         path = PRIVATE_STORAGE_DIR / f"{uuid4()}.pdf"
-        path.write_bytes(content)
+        await asyncio.to_thread(path.write_bytes, content)
         return path
     except OSError:
         raise HTTPException(status_code=500, detail="Report could not be stored")
@@ -204,7 +205,7 @@ async def create_report(
             raise HTTPException(status_code=400, detail="A PDF file is required")
 
         filename, content, pages = await _read_pdf(upload)
-        stored_path = _save_private_pdf(content)
+        stored_path = await _save_private_pdf(content)
         metadata = {
             "original_filename": filename,
             "processing_status": "READY_FOR_REVIEW",
@@ -220,7 +221,7 @@ async def create_report(
                 metadata=metadata,
             )
         except HTTPException:
-            stored_path.unlink(missing_ok=True)
+            await asyncio.to_thread(stored_path.unlink, missing_ok=True)
             raise
         return _report_response(report)
 
