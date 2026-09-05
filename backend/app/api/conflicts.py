@@ -58,6 +58,22 @@ def _center(db: Session, conflict: ConflictDB):
     return data
 
 
+def _response(conflict: ConflictDB) -> ConflictResponse:
+    """Serialize the canonical conflict row for legacy/list endpoints."""
+    return ConflictResponse(
+        id=conflict.id,
+        conflict_type=conflict.conflict_type,
+        entity_type=conflict.entity_type,
+        entity_id_1=conflict.entity_id_1,
+        entity_id_2=conflict.entity_id_2,
+        description=conflict.description,
+        severity=conflict.severity,
+        resolved=conflict.resolved,
+        resolution_notes=conflict.resolution_notes,
+        created_at=conflict.created_at,
+    )
+
+
 @router.get("", response_model=List[ConflictCenterResponse])
 async def list_conflict_center(db: Session = Depends(get_db)):
     return [_center(db, item) for item in db.query(ConflictDB).order_by(ConflictDB.created_at.desc()).all()]
@@ -231,21 +247,7 @@ async def detect_conflicts(db: Session = Depends(get_db)):
     # Return stored conflicts
     stored_conflicts = db.query(ConflictDB).all()
     
-    return [
-        ConflictResponse(
-            id=conflict.id,
-            conflict_type=conflict.conflict_type,
-            entity_type=conflict.entity_type,
-            entity_id_1=conflict.entity_id_1,
-            entity_id_2=conflict.entity_id_2,
-            description=conflict.description,
-            severity=conflict.severity,
-            resolved=conflict.resolved,
-            resolution_notes=conflict.resolution_notes,
-            created_at=conflict.created_at
-        )
-        for conflict in stored_conflicts
-    ]
+    return [_response(conflict) for conflict in stored_conflicts]
 
 
 @router.get("/", response_model=List[ConflictResponse])
@@ -255,21 +257,7 @@ async def get_conflicts(db: Session = Depends(get_db)):
     """
     conflicts = db.query(ConflictDB).all()
     
-    return [
-        ConflictResponse(
-            id=conflict.id,
-            conflict_type=conflict.conflict_type,
-            entity_type=conflict.entity_type,
-            entity_id_1=conflict.entity_id_1,
-            entity_id_2=conflict.entity_id_2,
-            description=conflict.description,
-            severity=conflict.severity,
-            resolved=conflict.resolved,
-            resolution_notes=conflict.resolution_notes,
-            created_at=conflict.created_at
-        )
-        for conflict in conflicts
-    ]
+    return [_response(conflict) for conflict in conflicts]
 
 
 @router.get("/unresolved", response_model=List[ConflictResponse])
@@ -279,21 +267,7 @@ async def get_unresolved_conflicts(db: Session = Depends(get_db)):
     """
     conflicts = db.query(ConflictDB).filter(ConflictDB.resolved == False).all()
     
-    return [
-        ConflictResponse(
-            id=conflict.id,
-            conflict_type=conflict.conflict_type,
-            entity_type=conflict.entity_type,
-            entity_id_1=conflict.entity_id_1,
-            entity_id_2=conflict.entity_id_2,
-            description=conflict.description,
-            severity=conflict.severity,
-            resolved=conflict.resolved,
-            resolution_notes=conflict.resolution_notes,
-            created_at=conflict.created_at
-        )
-        for conflict in conflicts
-    ]
+    return [_response(conflict) for conflict in conflicts]
 
 
 @router.get("/{entity_type}/{entity_id}", response_model=List[ConflictResponse])
@@ -306,21 +280,7 @@ async def get_entity_conflicts(entity_type: str, entity_id: int, db: Session = D
         (ConflictDB.entity_id_1 == entity_id) | (ConflictDB.entity_id_2 == entity_id)
     ).all()
     
-    return [
-        ConflictResponse(
-            id=conflict.id,
-            conflict_type=conflict.conflict_type,
-            entity_type=conflict.entity_type,
-            entity_id_1=conflict.entity_id_1,
-            entity_id_2=conflict.entity_id_2,
-            description=conflict.description,
-            severity=conflict.severity,
-            resolved=conflict.resolved,
-            resolution_notes=conflict.resolution_notes,
-            created_at=conflict.created_at
-        )
-        for conflict in conflicts
-    ]
+    return [_response(conflict) for conflict in conflicts]
 
 
 @router.post("/resolve/{conflict_id}", response_model=ConflictResponse)
