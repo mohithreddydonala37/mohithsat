@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Annotated, Optional, List
+from typing import Annotated, Optional, List, Literal
 from datetime import datetime, timezone
 from .enums import RangeStatus, Origin, VerificationStatus
 
@@ -83,6 +83,15 @@ class ConflictResolutionRequest(BaseModel):
     conflict_id: int
     resolved: bool
     resolution_notes: Optional[str] = None
+
+
+class ConflictResolveRequest(BaseModel):
+    decision: Literal["SOURCE_A", "SOURCE_B", "UNRESOLVED"]
+    notes: Optional[str] = Field(default=None, max_length=2000)
+
+
+class ConflictFlagRequest(BaseModel):
+    notes: Optional[str] = Field(default=None, max_length=2000)
 
 
 class QuestionRequest(BaseModel):
@@ -219,6 +228,25 @@ class ConflictResponse(BaseModel):
     resolved: bool
     resolution_notes: Optional[str]
     created_at: datetime
+
+
+class ConflictSideResponse(BaseModel):
+    entity_type: str
+    entity_id: int
+    report_id: Optional[int] = None
+    source_document: Optional[str] = None
+    source_page: Optional[int] = None
+    source_text: Optional[str] = None
+    value: Optional[str] = None
+    details: dict = Field(default_factory=dict)
+    provenance: Optional[dict] = None
+    verification: Optional[dict] = None
+
+
+class ConflictCenterResponse(ConflictResponse):
+    status: Literal["UNRESOLVED", "RESOLVED", "FLAGGED"]
+    source_a: Optional[ConflictSideResponse] = None
+    source_b: Optional[ConflictSideResponse] = None
 
 
 class ProvenanceResponse(BaseModel):

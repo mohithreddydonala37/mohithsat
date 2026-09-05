@@ -3,11 +3,12 @@ from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import datetime, timezone
 import enum
 from typing import Generator
+from app.config import get_settings
 
 Base = declarative_base()
 
 # Default database path
-DEFAULT_DATABASE_URL = "sqlite:///./medlens.db"
+DEFAULT_DATABASE_URL = get_settings().database_url
 
 # Create session factory
 SessionLocal = None

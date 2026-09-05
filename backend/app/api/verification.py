@@ -2,10 +2,30 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from sqlalchemy.orm import Session
 from app.models import VerificationRequest, VerificationResponse, ErrorResponse
-from app.models.database import get_db, VerificationDB, AuditEventDB
+from app.models.database import get_db, VerificationDB, AuditEventDB, LabResultDB, MedicationDB, AllergyDB, ConditionDB
 from app.services import VerificationService
 
 router = APIRouter(prefix="/verification", tags=["verification"])
+
+
+def _entity_row(db: Session, entity_type: str, entity_id: int):
+    models = {
+        "lab_result": LabResultDB,
+        "medication": MedicationDB,
+        "allergy": AllergyDB,
+        "condition": ConditionDB,
+    }
+    model = models.get(entity_type)
+    return db.query(model).filter(model.id == entity_id).first() if model else None
+
+
+def _sync_entity(db: Session, entity_type: str, entity_id: int, status, corrected_value=None):
+    row = _entity_row(db, entity_type, entity_id)
+    if row is not None:
+        row.verification_status = status
+        if corrected_value is not None and entity_type == "lab_result":
+            row.value = corrected_value
+    return row
 
 
 @router.post("/edit/{entity_type}/{entity_id}", response_model=VerificationResponse)
@@ -72,6 +92,7 @@ async def edit_entity(
         # Sync to database
         verification_db.status = VerificationStatus.EDITED
         verification_db.corrected_value = request.corrected_value
+        _sync_entity(db, entity_type, entity_id, VerificationStatus.EDITED, request.corrected_value)
     
     # Create audit event
     audit_event = AuditEventDB(
@@ -154,6 +175,7 @@ async def verify_entity(
     verification_db.status = VerificationStatus.VERIFIED
     verification_db.verified_by = actor_id
     verification_db.notes = request.notes
+    _sync_entity(db, entity_type, entity_id, VerificationStatus.VERIFIED)
     
     # Create audit event
     audit_event = AuditEventDB(
@@ -212,6 +234,7 @@ async def flag_entity(
     from app.models.enums import VerificationStatus
     verification_db.status = VerificationStatus.FLAGGED
     verification_db.notes = request.notes
+    _sync_entity(db, entity_type, entity_id, VerificationStatus.FLAGGED)
     
     # Create audit event
     audit_event = AuditEventDB(

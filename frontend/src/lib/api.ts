@@ -1,6 +1,6 @@
-import type { ApiClient, Patient, PatientCreate, Report, ReviewResponse } from "../types/api";
+import type { ApiClient, Patient, PatientCreate, Report, ReviewResponse, VerificationResponse, Conflict } from "../types/api";
 
-const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 async function get<T>(path: string): Promise<T> {
   const response = await fetch(`${baseUrl}${path}`);
   if (!response.ok) throw new Error("The MedLens API is unavailable.");
@@ -25,4 +25,11 @@ export const apiClient: ApiClient = {
   uploadReport: (patientId: number, file: File) => upload<import("../types/api").ReportUpload>(`/patients/${patientId}/reports`, file),
   extractReport: (reportId: number) => post<{ processing_status: string }>(`/reports/${reportId}/extract`, {}),
   getReview: (reportId: number) => get<ReviewResponse>(`/reports/${reportId}/review`),
+  getAudit: (entityType: string, entityId: number) => get<{ audit_events: import("../types/api").AuditEvent[] }>(`/verification/audit/${entityType}/${entityId}`),
+  editFact: (entityType: string, entityId: number, correctedValue: string) => post<VerificationResponse>(`/verification/edit/${entityType}/${entityId}`, { corrected_value: correctedValue }),
+  verifyFact: (entityType: string, entityId: number) => post<VerificationResponse>(`/verification/verify/${entityType}/${entityId}`, {}),
+  flagFact: (entityType: string, entityId: number, notes?: string) => post<VerificationResponse>(`/verification/flag/${entityType}/${entityId}`, { notes }),
+  getConflicts: () => get<Conflict[]>("/conflicts"),
+  resolveConflict: (id, decision, notes) => post<Conflict>(`/conflicts/${id}/resolve`, { decision, notes }),
+  flagConflict: (id, notes) => post<Conflict>(`/conflicts/${id}/flag`, { notes }),
 };

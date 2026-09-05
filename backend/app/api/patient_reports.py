@@ -16,10 +16,11 @@ from app.models import PatientCreateRequest, PatientResponse, PatientUpdateReque
 from app.models import ReportCreateRequest, ReportResponse
 from app.models.database import PatientDB, ReportDB, ConflictDB, ProvenanceDB, VerificationDB, get_db
 from app.services.extraction_pipeline import extract_report
+from app.config import get_settings
 
 
 router = APIRouter(tags=["patients", "reports"])
-MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+MAX_UPLOAD_SIZE = get_settings().max_upload_size
 PRIVATE_STORAGE_DIR = Path(__file__).resolve().parents[2] / "data" / "private_reports"
 
 

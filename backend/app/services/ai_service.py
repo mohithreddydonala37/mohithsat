@@ -127,7 +127,7 @@ class AIService:
             # Handle provider failures gracefully
             return {
                 "success": False,
-                "error": str(e),
+                "error": "AI extraction is currently unavailable.",
                 "provider": self.provider.get_provider_name(),
                 "model": self.provider.get_model_name()
             }
@@ -273,7 +273,7 @@ class AIService:
             return summary
         except Exception as e:
             # Handle provider failures
-            return f"Summary generation failed: {str(e)}"
+            return "Summary generation is currently unavailable."
     
     async def answer_question(
         self,
@@ -298,4 +298,4 @@ class AIService:
             return answer
         except Exception as e:
             # Handle provider failures
-            return f"Failed to answer question: {str(e)}"
+            return "The answer service is currently unavailable."

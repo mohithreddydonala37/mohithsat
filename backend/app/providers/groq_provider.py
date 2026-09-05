@@ -1,10 +1,10 @@
 import json
-import os
 from typing import Any, Dict, Optional
 
 from groq import AsyncGroq
 
 from app.models.extraction import ExtractionPayload
+from app.config import get_settings
 from .ai_provider import AIProvider
 
 
@@ -60,10 +60,11 @@ class GroqProvider(AIProvider):
     """Server-side Groq adapter; no other layer may import the Groq SDK."""
 
     def __init__(self, client: Optional[Any] = None):
-        self.api_key = os.getenv("GROQ_API_KEY")
-        self.model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+        settings = get_settings()
+        self.api_key = settings.groq_api_key
+        self.model = settings.groq_model
         if not self.api_key:
-            raise ValueError("GROQ_API_KEY environment variable is required")
+            raise ValueError("AI provider is not configured")
         self.client = client or AsyncGroq(api_key=self.api_key)
 
     async def extract(self, document_text: str, schema: Dict[str, Any]) -> Dict[str, Any]:

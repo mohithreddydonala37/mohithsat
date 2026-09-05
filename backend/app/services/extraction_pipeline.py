@@ -1,5 +1,4 @@
 import json
-import os
 from datetime import datetime, timezone
 from typing import Any
 
@@ -11,6 +10,7 @@ from app.models.database import (
 )
 from app.models.enums import Origin, VerificationStatus
 from app.models import Allergy, Condition, LabResult, Medication
+from app.config import get_settings
 from app.providers.groq_provider import GroqProvider
 from app.providers.mock_provider import MockAIProvider
 from app.services.ai_service import AIService
@@ -28,7 +28,7 @@ def _pages(report: ReportDB) -> list[dict[str, Any]]:
 
 
 def _provider():
-    if os.getenv("MEDLENS_AI_PROVIDER", "groq").lower() == "mock":
+    if get_settings().ai_provider.lower() == "mock":
         return MockAIProvider()
     return GroqProvider()
 
