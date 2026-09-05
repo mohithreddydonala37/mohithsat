@@ -1,0 +1,3 @@
+import { Check, Circle, Link2, ScanSearch, ShieldCheck } from "lucide-react";
+const stages = [[ScanSearch, "AI extracted"], [Link2, "Source linked"], [Check, "Range validated"], [Circle, "Conflict checked"], [ShieldCheck, "Human verified"]] as const;
+export function TrustChain({ active = 2 }: { active?: number }) { return <ol className="trust-chain" aria-label="Evidence trust chain">{stages.map(([Icon, label], index) => <li key={label} className={index <= active ? "complete" : ""}><span className="trust-icon"><Icon size={14} /></span><span>{label}</span>{index < stages.length - 1 && <span className="trust-line" aria-hidden="true" />}</li>)}</ol>; }
