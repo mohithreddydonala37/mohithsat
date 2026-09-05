@@ -1,6 +1,6 @@
 import type { ApiClient, Patient, PatientCreate, Report, ReviewResponse, VerificationResponse, Conflict } from "../types/api";
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const baseUrl = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "/api" : "http://localhost:8000");
 async function get<T>(path: string): Promise<T> {
   const response = await fetch(`${baseUrl}${path}`);
   if (!response.ok) throw new Error("The MedLens API is unavailable.");
